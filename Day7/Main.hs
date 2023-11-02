@@ -5,14 +5,21 @@ import qualified Data.List.Split as Split
 import qualified Data.Text as Text
 import qualified Data.Char as Char
 
+type Rule = (String, [(Int, String)])
+type Rulemap = Map.Map String [(Int, String)]
+
 main :: IO ()
 main = do  
-    rules <- lines <$> readFile "input.txt"
-    putStrLn (map parseRule $ rules)
+    rules <- Map.fromList . map parseRule . lines <$> readFile "input.txt"
+    putStrLn (show $ (canStoreN "shiny gold" rules))
 
-canStore :: String -> 
+canStoreNof :: String -> Rulemap -> String -> Int
+canStoreNof s rules key = sum . map (\(num, col) -> if col == s then num else (canStoreNof s rules col)) $ rules Map.! key
 
-parseRule :: String -> (String, [(Int, String)])
+canStoreN :: String -> Rulemap -> Int
+canStoreN key rules = sum . map (\(num, col) -> num + num * (canStoreN col rules)) $ rules Map.! key
+
+parseRule :: String -> Rule
 parseRule s = let [color, contents] = Split.splitOn " bags contain " $ s
                   contentList = parseContents $ contents
               in (color, contentList)
